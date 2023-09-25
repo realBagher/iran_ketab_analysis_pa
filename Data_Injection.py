@@ -65,6 +65,12 @@ df[['book_id', 'tag_id']].to_sql('book_tag', con=engine, if_exists='append', ind
 # Insert data from the DataFrame into tag table
 df[['tag_id', 'tag_title']].to_sql('tag', con=engine, if_exists='append', index=False)
 
+# Insert data from the DataFrame into book_translator table
+df[['book_id', 'translator_id']].to_sql('book_translator', con=engine, if_exists='append', index=False)
+
+# Insert data from the DataFrame into book_writer table
+df[['book_id', 'writer_id']].to_sql('book_writer', con=engine, if_exists='append', index=False)
+
 # Commit changes and close the session
 session.commit()
 session.close()
