@@ -1,6 +1,6 @@
 
 from sqlalchemy import create_engine, MetaData, create_engine, ForeignKey
-from sqlalchemy import Table, Column, Integer, String, Float, Text, DateTime
+from sqlalchemy import Table, Column, Integer, String, Float, Text, DateTime,Boolean
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from sqlalchemy.schema import Sequence
@@ -11,17 +11,17 @@ from sqlalchemy.orm import sessionmaker
 #%%
 meta = MetaData()
 USERNAME = 'root'
-PASSWORD = '---------'
+PASSWORD = '1393ram1393#$'
 SERVER = 'localhost'
 engine = create_engine(f'mysql+pymysql://{USERNAME}:{PASSWORD}@{SERVER}:3306/', echo=True)
 conn = engine.connect()
-database_name = 'IranKetab_scraper1'
+database_name = 'IranKetab_scraper'
 create_database_query = f"CREATE DATABASE {database_name}"
 conn.execute(create_database_query)
 
 
 #%%
-engine = create_engine(f'mysql+pymysql://{USERNAME}:{PASSWORD}@{SERVER}:3306/IranKetab_scraper1', echo=True)
+engine = create_engine(f'mysql+pymysql://{USERNAME}:{PASSWORD}@{SERVER}:3306/IranKetab_scraper', echo=True)
 conn = engine.connect()
 
 
@@ -35,7 +35,7 @@ class Book(Base):
     __tablename__ = 'book'
 
     id = Column(Integer, primary_key=True)
-    ISBN = Column(String(13), unique=True)
+    ISBN = Column(String(14), unique=True)
     persian_title = Column(String(255))
     english_title = Column(String(255))
     rate = Column(Float)
@@ -45,7 +45,6 @@ class Book(Base):
     current_price = Column(Float)  # for change price in interval time
     publisher_name = Column(String(32))
     publisher_id = Column(Integer, unique=True)
-    ISBN13 = Column(String(13))
     size = Column(String(32))
     num_page = Column(Integer)
     cover_type = Column(String(32))
@@ -60,8 +59,20 @@ class Person(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     person_id = Column(Integer, unique=True)
     name = Column(String(32))
+    is_writer = Column(Boolean)
+    is_translator = Column(Boolean)
+
+
+class BookTranslator(Base):
+    __tablename__ = 'book_translator'
     book_id = Column(Integer, ForeignKey("book.id"))
-    role = Column(String(8))
+    translator_id = Column(Integer, ForeignKey("person.person_id"), primary_key=True)
+
+
+class BookWriter(Base):
+    __tablename__ = 'book_writer'
+    book_id = Column(Integer, ForeignKey("book.id"))
+    writer_id = Column(Integer, ForeignKey("person.person_id"), primary_key=True)
 
 
 class PersonDescription(Base):
@@ -90,7 +101,7 @@ class BookTag(Base):
     __tablename__ = 'book_tag'
 
     book_id = Column(Integer, ForeignKey("book.id"), primary_key=True)
-    tag_id = Column(Integer,unique=True)
+    tag_id = Column(Integer, unique=True)
 
 
 class Tag(Base):
