@@ -23,8 +23,7 @@ except mysql.connector.Error as err:
     st.error(f"Error connecting to the database: {err}")
     st.stop()
 
-
-'# Correlation between book tags'
+'## Correlation between book tags'
 rules_df=pd.read_csv('Confidence.csv')
 t=rules_df.loc[(rules_df.len_act>=1)&(rules_df.len_cqt==1)][['cqt']].drop_duplicates().values
 tag_l=[x[0] for x in t]
@@ -37,5 +36,6 @@ if len(li1)>0:
                                                                                                   ascending=False,
                                                                                                   inplace=False)
     st.dataframe(df[['Consequent','Confidence']].head(5))
+
 
 
