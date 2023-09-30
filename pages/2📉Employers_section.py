@@ -46,7 +46,7 @@ st.dataframe(df0)
 
 
 
-'## The second hypothesis'
+'## The second hypothesis test'
 try:
     connection = mydb
     query = "SELECT * FROM book"
