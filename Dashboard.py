@@ -4,12 +4,19 @@ import matplotlib.pyplot as plt
 import mysql.connector
 import altair as alt
 
+with open('info of database.txt') as p:
+    line=str(p.readline()).strip()
+    host=line[0]
+    user=line[1]
+    password=line[2]
+    database=line[3]
+    p.close()
 try:
     mydb = mysql.connector.connect(
-        host="localhost",
-        user="root",
-        password="****",
-        database="schema_name2"
+        host=host,
+        user=user,
+        password=password,
+        database=database
     )
     st.success("Connected to the database successfully!")
 except mysql.connector.Error as err:
