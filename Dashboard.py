@@ -5,11 +5,11 @@ import mysql.connector
 import altair as alt
 
 with open('info of database.txt') as p:
-    line=str(p.readline()).strip()
-    host=line[0]
-    user=line[1]
-    password=line[2]
-    database=line[3]
+    lines=(p.readlines())
+    host=lines[0].strip()
+    user=lines[1].strip()
+    password=lines[2].strip()
+    database=lines[3].strip()
     p.close()
 try:
     mydb = mysql.connector.connect(
@@ -44,12 +44,12 @@ def page1():
     HAVING book_count > 2000
     """
     tag_data = run_query(tag_query)
-    
+
     # Display the number of books per tag as a bar chart
     st.subheader("1. Number of Books per Tag > 2000")
     tag_df = pd.DataFrame(tag_data, columns=["Tag", "Book Count"])
     chart = alt.Chart(tag_df).mark_bar().encode(
-    x=alt.X('Tag', sort='-y'), 
+    x=alt.X('Tag', sort='-y'),
     y='Book Count'
     )
     st.altair_chart(chart, use_container_width=True)
@@ -69,7 +69,7 @@ def page1():
     st.subheader("2. Top 10 Publishers by Book Count")
     publisher_df = pd.DataFrame(publisher_data, columns=["Publisher", "Book Count"])
     chart = alt.Chart(publisher_df).mark_bar().encode(
-    x=alt.X('Publisher', sort='-y'), 
+    x=alt.X('Publisher', sort='-y'),
     y='Book Count'
     )
     st.altair_chart(chart, use_container_width=True)
@@ -109,7 +109,7 @@ def page1():
     st.subheader("4. Top 10 Writers by Book Count")
     writer_df = pd.DataFrame(writer_data, columns=["Writer", "Book Count"])
     chart = alt.Chart(writer_df).mark_bar().encode(
-    x=alt.X('Writer', sort='-y'), 
+    x=alt.X('Writer', sort='-y'),
     y='Book Count'
     )
     st.altair_chart(chart, use_container_width=True)
@@ -132,7 +132,7 @@ def page1():
     st.subheader("5. Top 10 Translators by Book Count")
     translator_df = pd.DataFrame(translator_data, columns=["Translator", "Book Count"])
     chart = alt.Chart(translator_df).mark_bar().encode(
-    x=alt.X('Translator', sort='-y'), 
+    x=alt.X('Translator', sort='-y'),
     y='Book Count'
     )
     st.altair_chart(chart, use_container_width=True)
