@@ -323,6 +323,24 @@ def q12():
     st.subheader("Buyer request 2: The best books in the first quarter of quality")
     st.dataframe(df)
 
+    options = st.multiselect("Select View Option", ["Top High Print Series", "Top High Likes"])
+    if "Top High Print Series" in options and "Top High Likes" in options:
+        like_min = df['series'].min()
+        like_max = df['series'].max()
+        avg = (like_max - like_min) / 5
+        sorted_df = df[(df['series'] >= avg) & (df['series'] <= like_max)].sort_values(by=['series'],
+                                                                                   ascending=False)
+        st.dataframe(sorted_df)
+    elif "Top High Print Series" in options:
+        sorted_df = df.sort_values(by='series', ascending=False)
+        st.dataframe(sorted_df)
+    elif "Top High Likes" in options:
+        like_min = df['like'].min()
+        like_max = df['like'].max()
+        avg = (like_max - like_min) / 5
+        sorted_df = df[(df['like'] >= avg) & (df['like'] <= like_max)].sort_values(by='like', ascending=False)
+        st.dataframe(sorted_df)
+
 def q13():
     # Author request
     rate_percentile_query = "SELECT rate FROM book ORDER BY rate DESC"
@@ -475,6 +493,58 @@ def q16():
             ascending=False,
             inplace=False)
         st.dataframe(df[['Consequent', 'Confidence']].head(5))
+
+def q17():
+    # Average Rate for Each Tag Title
+    st.subheader("Average Rate for Each Tag Title")
+    query11 = """
+           with a as (
+                    SELECT t.tag_title AS tag, AVG(b.rate) AS avg_rate,count(*)as c
+                    FROM book_tag AS bt
+                    JOIN tag AS t ON bt.tag_id = t.tag_id
+                    JOIN book AS b ON bt.book_id = b.id
+                    GROUP BY tag
+                    )
+            select *
+            from a
+            where c>=500
+            """
+    mycursor = mydb.cursor()
+    mycursor.execute(query11)
+    data = mycursor.fetchall()
+    column_names = [out[0] for out in mycursor.description]
+    df3 = pd.DataFrame(data, columns=column_names)
+    chart3 = alt.Chart(df3).mark_area(
+        color="lightblue",
+        interpolate='step-after',
+        line=True
+    ).encode(
+        x='tag',
+        y='avg_rate'
+    ).interactive()
+    st.altair_chart(chart3, use_container_width=True)
+
+def q18():
+    # Price Distribution of Top Ten Publishers
+    st.subheader("Price Distribution of Top Ten Publishers")
+    query = """
+       SELECT publisher_name, price
+       FROM book
+       WHERE publisher_name != ''
+       ORDER BY price DESC
+       LIMIT 10
+       """
+    data=run_query(query)
+    df = pd.DataFrame(data, columns=["Publisher", "Price"])
+    chart = alt.Chart(df).mark_bar().encode(
+        x=alt.X("Price:Q", bin=alt.Bin(maxbins=20), title="Price"),
+        y=alt.Y("count():Q", title="Count"),
+        color=alt.Color("Publisher:N", legend=alt.Legend(title="Publisher"))
+    ).properties(width=600, height=400)
+
+    st.altair_chart(chart, use_container_width=True)
+
+
 try:
     page_options = {
         "chart 1": q1,
@@ -493,6 +563,8 @@ try:
         "hypothesis test":q14,
         "More options graph": q15,
         "More options Correlation": q16,
+        "More options Average Rate": q17,
+        "More options Price Distribution": q18,
 
 
     }
