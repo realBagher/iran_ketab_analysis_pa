@@ -1,3 +1,4 @@
+import hazm
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -6,7 +7,18 @@ import altair as alt
 import scipy.stats as stats
 import networkx as nx
 from pyvis.network import Network
+import numpy as np
+from PIL import Image
 import streamlit.components.v1 as components
+from wordcloud import WordCloud
+from wordcloud_fa import WordCloudFa
+import nltk
+from googletrans import Translator, constants
+from pprint import pprint
+import re
+import string
+from nltk.stem.snowball import SnowballStemmer
+from nltk.tokenize import word_tokenize
 with open('info of database.txt') as p:
     lines=(p.readlines())
     host=lines[0].strip()
@@ -544,7 +556,53 @@ def q18():
 
     st.altair_chart(chart, use_container_width=True)
 
-
+def q19():
+    # More options Word Cloud
+    st.subheader("More options : Word Cloud")
+    query = '''SELECT tag_title FROM tag;'''
+    data=run_query(query)
+    genre_list = []
+    for i in data:
+        genre_list.append(i[0])
+    li1 = st.multiselect(
+        "Select your tag:",
+        genre_list, max_selections=1)
+    if len(li1) > 0:
+        mycursor = mydb.cursor()
+        mycursor.execute(f'''
+                            SELECT tag_title,content
+                            FROM book
+                            inner join book_description on book.id = book_description.book_id
+                            inner join book_tag on book.id = book_tag.book_id
+                            inner join tag on book_tag.tag_id = tag.tag_id
+                            where tag_title in (%s) 
+                ''', tuple(li1))
+        data = mycursor.fetchall()
+        df = pd.DataFrame(data, columns=['tag_title','content'])
+        text = " ".join(review for review in df.content)
+        if text:
+            text = text.lower()
+            number_pattern = r'\d+'
+            text = re.sub(pattern=number_pattern, repl=" ", string=text)
+            text = text.translate(str.maketrans('', '', string.punctuation))
+            with open('stopwords.txt', encoding='utf-8') as stopwords_file:
+                stopwords = stopwords_file.readlines()
+                stopwords_file.close()
+            stopwords = [line.replace('\n', '') for line in stopwords]
+            stopwords.extend(hazm.stopwords_list())
+            stopwords.append('no')
+            stopwords.append('description')
+            stopwords.append('کتاب')
+            stopwords.append('کتابی')
+            stopwords.append(li1[0])
+            stopwords = set(stopwords)
+            mask_array = np.array(Image.open("pic.jpg"))
+            wordcloud = WordCloudFa(mask=mask_array,stopwords=stopwords, background_color="white", width=800, height=600,
+                                    persian_normalize=True,include_numbers=False,no_reshape=False,collocations=False).generate(text)
+            fig, ax = plt.subplots(figsize=(24, 12))
+            ax.imshow(wordcloud, interpolation='bilinear')
+            ax.axis("off")
+            st.write(fig)
 try:
     page_options = {
         "chart 1": q1,
@@ -565,6 +623,7 @@ try:
         "More options Correlation": q16,
         "More options Average Rate": q17,
         "More options Price Distribution": q18,
+        "More options Word Cloud": q19,
 
 
     }
@@ -572,9 +631,6 @@ try:
     page_options[selected_page]()
 except mysql.connector.Error as err:
     st.error(f"An error occurred: {err}")
-
-
-
 
 if mydb.is_connected():
     mydb.close()
