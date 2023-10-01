@@ -3,7 +3,10 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import mysql.connector
 import altair as alt
-
+import scipy.stats as stats
+import networkx as nx
+from pyvis.network import Network
+import streamlit.components.v1 as components
 with open('info of database.txt') as p:
     lines=(p.readlines())
     host=lines[0].strip()
@@ -32,9 +35,7 @@ def run_query(query):
     except mysql.connector.Error as err:
         st.error(f"Error executing the query: {err}")
         return None
-def page1():
-    st.title("Analytical charts")
-
+def q1():
     # 1_Query to get the number of books per tag
     tag_query = """
     SELECT tag.tag_title, COUNT(book_tag.book_id) AS book_count
@@ -44,7 +45,6 @@ def page1():
     HAVING book_count > 2000
     """
     tag_data = run_query(tag_query)
-
     # Display the number of books per tag as a bar chart
     st.subheader("1. Number of Books per Tag > 2000")
     tag_df = pd.DataFrame(tag_data, columns=["Tag", "Book Count"])
@@ -53,7 +53,7 @@ def page1():
     y='Book Count'
     )
     st.altair_chart(chart, use_container_width=True)
-
+def q2():
     # 2_query to get the top 10 publishers by book count
     publisher_query = """
     SELECT publisher.name, COUNT(book.id) AS book_count
@@ -73,7 +73,7 @@ def page1():
     y='Book Count'
     )
     st.altair_chart(chart, use_container_width=True)
-
+def q3():
     # 3_Query to get the number of books per publication year
     year_query = """
     SELECT solarh_py AS publication_year, COUNT(id) AS book_count
@@ -91,7 +91,7 @@ def page1():
         y='Book Count'
     )
     st.altair_chart(chart, use_container_width=True)
-
+def q4():
     # 4_Query to get the top 10 writers by book count
     writer_query = """
     SELECT person.name, COUNT(book.id) AS book_count
@@ -113,7 +113,7 @@ def page1():
     y='Book Count'
     )
     st.altair_chart(chart, use_container_width=True)
-
+def q5():
     # 5_Query to get the top 10 translators by book count
     translator_query = """
     SELECT person.name, COUNT(book.id) AS book_count
@@ -136,7 +136,7 @@ def page1():
     y='Book Count'
     )
     st.altair_chart(chart, use_container_width=True)
-
+def q6():
     # 6_Query to get a scatter plot of pages vs. publication year
     scatter_query = """
     SELECT num_page, solarh_py AS publication_year
@@ -155,7 +155,7 @@ def page1():
     tooltip=["Publication Year", "Pages"]
     )
     st.altair_chart(scatter_chart, use_container_width=True)
-
+def q7():
     # 7_Query to get a scatter plot of price vs. publication year
     price_query = """
     SELECT price, solarh_py AS publication_year
@@ -177,14 +177,332 @@ def page1():
     )
     st.altair_chart(scatter_chart, use_container_width=True)
 
+def q8():
+    # 8_Query to get a Price scatter chart based on book rate
+    price_query = """
+                SELECT rate, price
+                FROM book
+                where rate between 2.5 and 4.5
+                  and price between 0 and 4000000
+"""
+    price_data = run_query(price_query)
+
+    # Display the Price scatter chart based on book rate
+    st.subheader("8. Scatter Plot: Price scatter chart based on book rate")
+    df = pd.DataFrame(price_data, columns=['rate', 'price'])
+    chart = alt.Chart(df).mark_circle(size=15).encode(
+        x=alt.X("rate:Q", title="Rating", scale=alt.Scale(domain=(2.5, 4.5), nice=False)),
+        y=alt.Y("price:Q", title="Price Of Book"),
+        tooltip=['rate', 'price']
+    )
+    st.altair_chart(chart, use_container_width=True)
+
+
+def q9():
+    # 9_Query to Chart of the number of books according to the type of cut
+    price_query = query = "SELECT size, COUNT(*) as book_count FROM book GROUP BY size"
+    price_data = run_query(price_query)
+
+    # Display Chart of the number of books according to the type of cut
+    st.subheader("9. Chart: number of books according to the type of cut")
+    df = pd.DataFrame(price_data, columns=["Size", "Book Count"])
+    chart = alt.Chart(df).mark_bar().encode(
+        x="Size:O",
+        y="Book Count:Q"
+    )
+    st.altair_chart(chart, use_container_width=True)
+
+def q10():
+    # 10_Query Interactive chart
+    st.sidebar.subheader("Advanced Book Search")
+    rate_range = st.sidebar.slider("Rate Range", min_value=0.0, max_value=5.0, step=0.1, value=(0.0, 5.0))
+    english_title = st.sidebar.text_input("English Title").replace(' ','%')
+    persian_title = st.sidebar.text_input("Persian Title").replace(' ','%')
+    publisher_name = st.sidebar.text_input("Publisher Name").replace(' ','%')
+    min_solarh_py = st.sidebar.number_input("Minimum Solarh Py", min_value=0, step=100, value=0)
+    max_solarh_py = st.sidebar.number_input("Maximum Solarh Py", min_value=0, step=100, value=8500)
+    tag_titles_list = st.sidebar.text_input("Tag").replace(' ','%')
+    publisher = st.sidebar.text_input("Publisher").replace(' ','%')
+    writer = st.sidebar.text_input("Writer").replace(' ','%')
+    cover = st.sidebar.text_input("Cover Type").replace(' ','%')
+    min_rate, max_rate = rate_range
+    # Display Interactive chart
+    st.subheader("10. Chart: Interactive chart")
+    query = f"""
+    SELECT b.rate, b.english_title, b.persian_title, b.publisher_name, b.solarh_py, t.tag_title, p.name, p2.name, b.cover_type
+    FROM book AS b
+             JOIN publisher AS p ON b.publisher_id = p.pub_id
+             JOIN book_tag AS bt ON b.id = bt.book_id
+             JOIN tag AS t ON bt.tag_id = t.tag_id
+             JOIN book_writer bw on b.id = bw.book_id
+             JOIN person p2 on bw.writer_id = p2.person_id AND p2.is_translator = 1
+    WHERE 
+            b.rate BETWEEN {min_rate} AND {max_rate}
+              AND b.english_title LIKE '%{english_title}%'
+              AND b.persian_title LIKE '%{persian_title}%'
+              AND b.publisher_name LIKE '%{publisher_name}%'
+              AND b.solarh_py BETWEEN {min_solarh_py} AND {max_solarh_py}
+              AND t.tag_title LIKE '%{tag_titles_list}%'
+              AND p.name LIKE '%{publisher}%'
+              AND p2.name LIKE '%{writer}%'
+              AND b.cover_type LIKE '%{cover}%'
+    """
+    values = (min_rate, max_rate, f"%{english_title}%", f"%{persian_title}%", f"%{publisher_name}%", min_solarh_py, max_solarh_py,
+    f"%{tag_titles_list}%", f"%{publisher}%", f"%{writer}%", f"%{cover}%")
+    mycursor = mydb.cursor()
+    mycursor.execute(query)
+    data=mycursor.fetchall()
+
+    df = pd.DataFrame(data, columns=['Rate', 'English Title', 'Persian Title', 'Publisher Name', 'Solarh Py', 'Tag',
+                                     'Publisher', 'Writer', 'Cover']).drop_duplicates()
+    if df.empty:
+        st.image('error.png', caption='???????')
+    else:
+        st.title("Interactive chart (advanced search)")
+        st.subheader("Search Results")
+        st.dataframe(df)
+    mycursor.close()
+
+def q11():
+    # Buyer request 1
+    price_query =  """SELECT b.persian_title,
+       p.is_writer          as is_writerr,
+       p.name               AS writer_name,
+       COUNT(DISTINCT b.id) AS num_books,
+       SUM(pd.`like`)       AS total_likes,
+       t2.tag_title         as tag
+FROM book b
+         JOIN book_tag bt ON bt.book_id = b.id
+         JOIN tag t2 ON t2.tag_id = bt.tag_id
+         JOIN book_writer bw ON b.id = bw.book_id
+         JOIN person p ON bw.writer_id = p.person_id
+         JOIN person_description pd ON p.person_id = pd.person_id
+WHERE t2.tag_title like '%ع%ش%ق%'
+GROUP BY p.is_writer, p.name, t2.tag_title, b.persian_title
+ORDER BY total_likes DESC, num_books DESC
+"""
+    data = run_query(price_query)
+
+    # Buyer request 1
+    st.subheader("Buyer request 1: The best authors of the romance genre")
+    df = pd.DataFrame(data,
+                      columns=['book name', 'is writer', 'writer name', 'num of books', 'total likes', 'tag name'])
+    df=df[['writer name']].drop_duplicates().head(5)
+    st.dataframe(df)
+
+def q12():
+    # Buyer request 2
+    rate_percentile_query = "SELECT rate FROM book ORDER BY rate DESC"
+    price_percentile_query = "SELECT price FROM book ORDER BY price ASC"
+    rate_results = run_query(rate_percentile_query)
+    price_results = run_query(price_percentile_query)
+    rate_index = int(len(rate_results) * 0.25)
+    price_index = int(len(price_results) * 0.2)
+    rate_threshold = rate_results[rate_index][0]
+    price_threshold = price_results[price_index][0]
+    query = f"""
+    SELECT b.id,
+           b.ISBN,
+           b.persian_title,
+           b.english_title,
+           b.rate,
+           b.price,
+           b.print_series,
+           pd.`like`
+    FROM book b
+             JOIN book_writer bw ON b.id = bw.book_id
+             JOIN person p on bw.writer_id = p.person_id
+             JOIN person_description pd on p.person_id = pd.person_id
+    WHERE b.rate >= {rate_threshold}
+      AND b.price <= {price_threshold}
+    order by rate desc, price asc
+    """
+    results=run_query(query)
+    df = pd.DataFrame(results, columns=['id', 'isbn', 'p_title', 'e_title', 'rate', 'price', 'series', 'like'])
+    # Buyer request 2
+    st.subheader("Buyer request 2: The best books in the first quarter of quality")
+    st.dataframe(df)
+
+def q13():
+    # Author request
+    rate_percentile_query = "SELECT rate FROM book ORDER BY rate DESC"
+    price_percentile_query = "SELECT price FROM book ORDER BY price ASC"
+    rate_results = run_query(rate_percentile_query)
+    price_results = run_query(price_percentile_query)
+    rate_index = int(len(rate_results) * 0.25)
+    price_index = int(len(price_results) * 0.2)
+    rate_threshold = rate_results[rate_index][0]
+    price_threshold = price_results[price_index][0]
+    query = query='''
+    select publisher.name as name,count(*) as number_of_books,sum(rate)/count(*) as mean_of_book_rate,sum(price)/count(*) as mean_of_book_price,
+       sum(print_series)/count(*) as mean_of_prseries
+from book
+inner join iranketab.book_tag bt on book.id = bt.book_id
+inner join tag on bt.tag_id = tag.tag_id
+inner join book_writer on book.id = book_writer.book_id
+inner join publisher on book.publisher_id = publisher.id
+where tag_title like '%تاریخی%'
+group by publisher.id
+order by mean_of_prseries DESC ,mean_of_book_price DESC ,mean_of_book_rate DESC ,number_of_books DESC
+limit 5
+'''
+    results=run_query(query)
+    df = pd.DataFrame(results,
+                       columns=['name', 'number_of_books', 'mean_of_book_rate', 'mean_of_book_price',
+                                'mean_of_prseries'])
+    # Author request
+    st.subheader("Author request: The best publications for printing historical books")
+    st.dataframe(df)
+
+def q14():
+    # The first hypothesis test
+    st.subheader("The first hypothesis test: Untranslated is expensive or translated")
+    query_no_translator = """
+    SELECT id, persian_title, price
+    FROM book
+    WHERE id NOT IN (SELECT book_id FROM book_translator)
+    """
+    query_with_translator = """
+    SELECT book.id, book.persian_title, book.price
+    FROM book
+    JOIN book_translator ON book.id = book_translator.book_id
+    """
+    alpha = 0.05
+    try:
+        books_no_translator = run_query(query_no_translator)
+        books_with_translator = run_query(query_with_translator)
+        prices_no_translator = [book[2] for book in books_no_translator]
+        prices_with_translator = [book[2] for book in books_with_translator]
+        t_stat, p_value = stats.ttest_ind(prices_no_translator, prices_with_translator)
+        st.code(f't_stat : {t_stat} p_value : {p_value} alpha : {alpha}')
+        result = ''
+        if p_value < alpha:
+            result = "There is a significant difference in their prices."
+        else:
+            result = "There is no significant difference in their prices."
+        st.subheader('', divider='rainbow')
+        st.subheader(f'{result}')
+        st.subheader('', divider='red')
+    except mysql.connector.Error as err:
+        print("Error executing SQL query:", err)
+
+    st.subheader("The second hypothesis test: Which cover is more expensive?")
+    try:
+        connection = mydb
+        query = "SELECT * FROM book"
+        data = pd.read_sql_query(query, connection)
+        hardcover_data = data[data['cover_type'] == 'جلد سخت']
+        softcover_data = data[data['cover_type'] == 'شومیز']
+
+        t_stat, p_value = stats.ttest_ind(hardcover_data['price'], softcover_data['price'])
+        st.code(f't_stat : {t_stat} p_value : {p_value} alpha : {alpha}')
+        if p_value < alpha:
+            result = ("There is a significant difference in their prices.")
+        else:
+            result = ("There is no significant difference in their prices.")
+
+        st.subheader('', divider='rainbow')
+        st.subheader(f'{result}')
+        st.subheader('', divider='green')
+        with open('Owners_info.txt', encoding='utf8') as p:
+            tx = ' '.join([n.strip() for n in p])
+            p.close()
+        st.markdown(f"<p style='text-align: right; color: white;'>{tx}</p>", unsafe_allow_html=True)
+        st.subheader('', divider='red')
+    except mysql.connector.Error as e:
+        (f"Database connection error: {e}")
+
+def q15():
+    # Graph of tags
+    st.subheader("Graph of tags")
+    G = nx.Graph()
+    query='''
+                select tag_title
+                from tag
+    '''
+    data = run_query(query)
+    nod_list = [x[0] for x in data]
+    eq='''
+        with a as (
+            SELECT
+                    bt.tag_id as tid,
+                    t.tag_title as tname,
+                    bt.book_id as bid
+            FROM book_tag as bt
+            join tag as t on bt.tag_id = t.tag_id
+)
+SELECT
+a.tname as tname1,
+a2.tname as tname2,
+COUNT(*) as cral
+FROM a
+JOIN a as a2 on a.tid
+WHERE a.bid=a2.bid and a.tid>a2.tid
+GROUP BY tname1,tname2
+ORDER BY cral DESC,tname1 ASC
+limit 233
+    '''
+    edata=run_query(eq)
+    G.add_nodes_from(nod_list)
+    # pos = nx.circular_layout(G, scale=1000)
+    # for n in nod_list:
+    #     G.add_node(n,
+    #                size=5,
+    #                x=pos[n][0],
+    #                y=pos[n][1],
+    #                physics=False)
+    for i in edata:
+        G.add_edge(i[0], i[1], title=i[2])
+    net = Network(height="1000px", width="100%", bgcolor="#222222", font_color="white", notebook=True)
+    net.from_nx(G)
+    net.show_buttons()
+    a = net.generate_html('h.html', local=False)
+    components.html(a, width=800, height=600)
+
+def q16():
+    # Correlation between book tags
+    st.subheader("Correlation between book tags")
+    rules_df = pd.read_csv('Confidence.csv')
+    t = rules_df.loc[(rules_df.len_act >= 1) & (rules_df.len_cqt == 1)][['cqt']].drop_duplicates().values
+    tag_l = [x[0] for x in t]
+    li1 = st.multiselect(
+        "Select your tag:",
+        tag_l, max_selections=3)
+    txt = ' '.join([x for x in li1])
+    if len(li1) > 0:
+        df = rules_df.loc[(rules_df.len_act == len(li1)) & (rules_df.act.str.contains(txt))].sort_values(
+            by='Confidence',
+            ascending=False,
+            inplace=False)
+        st.dataframe(df[['Consequent', 'Confidence']].head(5))
 try:
     page_options = {
-        "Analytical charts": page1
+        "chart 1": q1,
+        "chart 2": q2,
+        "chart 3": q3,
+        "chart 4": q4,
+        "chart 5": q5,
+        "chart 6": q6,
+        "chart 7": q7,
+        "chart 8": q8,
+        "chart 9": q9,
+        "Interactive chart": q10,
+        "Buyer request 1": q11,
+        "Buyer request 2": q12,
+        "Author request": q13,
+        "hypothesis test":q14,
+        "More options graph": q15,
+        "More options Correlation": q16,
+
+
     }
-    selected_page = st.sidebar.selectbox("Select a page", list(page_options.keys()))
+    selected_page = st.sidebar.selectbox("select:", list(page_options.keys()))
     page_options[selected_page]()
 except mysql.connector.Error as err:
     st.error(f"An error occurred: {err}")
+
+
+
 
 if mydb.is_connected():
     mydb.close()
