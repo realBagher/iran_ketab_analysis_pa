@@ -34,8 +34,8 @@ Base = declarative_base()
 class Book(Base):
     __tablename__ = 'book'
 
-    id = Column(Integer, primary_key=True)
-    ISBN = Column(String(14), unique=True)
+    id = Column(Integer, unique=True, primary_key=True)
+    ISBN = Column(String(32))
     persian_title = Column(String(255))
     english_title = Column(String(255))
     rate = Column(Float)
@@ -43,14 +43,15 @@ class Book(Base):
     net_price = Column(Float)
     discount_percent = Column(Float)
     current_price = Column(Float)  # for change price in interval time
-    publisher_name = Column(String(32))
-    publisher_id = Column(Integer, unique=True)
+    publisher_id = Column(Integer, ForeignKey("publisher.pub_id"))
+    publisher_name = Column(String(255))
     size = Column(String(32))
     num_page = Column(Integer)
     cover_type = Column(String(32))
     print_series = Column(Integer)
-    solarh_py = Column(DateTime)
-    geregorian_py = Column(DateTime)
+    solarh_py = Column(String(32))
+    gregorian_py = Column(String(32))
+    language = Column(String(128))
 
 
 class Person(Base):
@@ -58,21 +59,23 @@ class Person(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     person_id = Column(Integer, unique=True)
-    name = Column(String(32))
+    name = Column(String(255))
     is_writer = Column(Boolean)
     is_translator = Column(Boolean)
 
 
 class BookTranslator(Base):
     __tablename__ = 'book_translator'
+    id = Column(Integer, primary_key=True, autoincrement=True)
     book_id = Column(Integer, ForeignKey("book.id"))
-    translator_id = Column(Integer, ForeignKey("person.person_id"), primary_key=True)
+    translator_id = Column(Integer, ForeignKey("person.person_id"))
 
 
 class BookWriter(Base):
     __tablename__ = 'book_writer'
+    id = Column(Integer, primary_key=True, autoincrement=True)
     book_id = Column(Integer, ForeignKey("book.id"))
-    writer_id = Column(Integer, ForeignKey("person.person_id"), primary_key=True)
+    writer_id = Column(Integer, ForeignKey("person.person_id"))
 
 
 class PersonDescription(Base):
@@ -80,14 +83,15 @@ class PersonDescription(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     person_id = Column(Integer, ForeignKey("person.person_id"))
+    like = Column(Integer)
     description = Column(Text)
 
 
 class Publisher(Base):
     __tablename__ = 'publisher'
     id = Column(Integer, primary_key=True, autoincrement=True)
-    pub_id = Column(Integer, ForeignKey("book.publisher_id"), unique=True)
-    name = Column(String(32))
+    pub_id = Column(Integer, unique=True)
+    name = Column(String(255))
 
 
 class BookDescription(Base):
@@ -99,14 +103,14 @@ class BookDescription(Base):
 
 class BookTag(Base):
     __tablename__ = 'book_tag'
-
-    book_id = Column(Integer, ForeignKey("book.id"), primary_key=True)
-    tag_id = Column(Integer, unique=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    book_id = Column(Integer, ForeignKey("book.id"))
+    tag_id = Column(Integer,ForeignKey("tag.tag_id"))
 
 
 class Tag(Base):
     __tablename__ = 'tag'
-    tag_id = Column(Integer, ForeignKey("book_tag.tag_id"), primary_key=True)
+    tag_id = Column(Integer, primary_key=True)
     tag_title = Column(String(64))
 
 #%%
