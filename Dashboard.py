@@ -596,8 +596,8 @@ def q19():
             stopwords.append('کتابی')
             stopwords.append(li1[0])
             stopwords = set(stopwords)
-            mask_array = np.array(Image.open("pic.jpg"))
-            wordcloud = WordCloudFa(mask=mask_array,stopwords=stopwords, background_color="white", width=800, height=600,
+            mask_array = np.array(Image.open("image.jpg"))
+            wordcloud = WordCloudFa(stopwords=stopwords, background_color="white", width=900, height=500,
                                     persian_normalize=True,include_numbers=False,no_reshape=False,collocations=False).generate(text)
             fig, ax = plt.subplots(figsize=(24, 12))
             ax.imshow(wordcloud, interpolation='bilinear')

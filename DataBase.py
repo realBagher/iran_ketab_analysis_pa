@@ -6,17 +6,23 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.schema import Sequence
 from urllib.parse import quote_plus
 from sqlalchemy.orm import sessionmaker
-
-
+import pymysql
+with open('info of database.txt') as p:
+    lines=(p.readlines())
+    host=lines[0].strip()
+    user=lines[1].strip()
+    password=lines[2].strip()
+    database=lines[3].strip()
+    p.close()
 #%%
 meta = MetaData()
-USERNAME = 'root'
-PASSWORD = '1393ram1393#$'
-SERVER = 'localhost'
+USERNAME = user
+PASSWORD = password
+SERVER = host
 engine = create_engine(f'mysql+pymysql://{USERNAME}:{PASSWORD}@{SERVER}:3306/', echo=True)
 conn = engine.connect()
 database_name = 'IranKetab_scraper'
-create_database_query = f"CREATE DATABASE {database_name}"
+create_database_query = f"CREATE DATABASE IF NOT EXISTS {database_name}"
 conn.execute(create_database_query)
 
 
@@ -112,6 +118,13 @@ class Tag(Base):
     __tablename__ = 'tag'
     tag_id = Column(Integer, primary_key=True)
     tag_title = Column(String(64))
+
+class Price_changes(Base):
+    __tablename__ = 'Price_changes'
+    id = Column(Integer, primary_key=True)
+    book_id=Column(Integer,ForeignKey("book.id"))
+    price = Column(Float)
+    date = Column(DateTime)
 
 #%%
 
