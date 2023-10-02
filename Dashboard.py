@@ -19,7 +19,7 @@ import re
 import string
 from nltk.stem.snowball import SnowballStemmer
 from nltk.tokenize import word_tokenize
-with open('info of database.txt') as p:
+with open('info_of_database.txt') as p:
     lines=(p.readlines())
     host=lines[0].strip()
     user=lines[1].strip()

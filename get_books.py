@@ -13,7 +13,7 @@ headers = {'User-Agent':
               "en-US,en;q=0.5",
            'encoding':'utf-8'}
 site='https://www.iranketab.ir'
-df=pd.read_csv('link of all books.csv')
+df=pd.read_csv('link_of_all_books.csv')
 links=df['0'].values
 site='https://www.iranketab.ir'
 
