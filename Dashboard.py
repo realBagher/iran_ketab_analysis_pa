@@ -103,6 +103,15 @@ def q3():
         y='Book Count'
     )
     st.altair_chart(chart, use_container_width=True)
+    year_df["Publication Year"] = year_df["Publication Year"].astype(int)
+    year_range = st.slider("Select Year Range", min_value=1370, max_value=1402, value=(1370, 1402))
+    filtered_df = year_df[
+        (year_df["Publication Year"] >= year_range[0]) & (year_df["Publication Year"] <= year_range[1])]
+    chart = alt.Chart(filtered_df).mark_line(point=True).encode(
+        x='Publication Year',
+        y='Book Count'
+    )
+    st.altair_chart(chart, use_container_width=True)
 def q4():
     # 4_Query to get the top 10 writers by book count
     writer_query = """
@@ -167,6 +176,19 @@ def q6():
     tooltip=["Publication Year", "Pages"]
     )
     st.altair_chart(scatter_chart, use_container_width=True)
+    scatter_df["Publication Year"] = scatter_df["Publication Year"].astype(int)
+    page_range = st.slider("Select Page Range", min_value=0, max_value=10000, value=(0, 10000))
+    year_range = st.slider("Select Year Range", min_value=1370, max_value=1402, value=(1370, 1402))
+    filtered_df = scatter_df[
+        (scatter_df["Pages"] >= page_range[0]) & (scatter_df["Pages"] <= page_range[1]) &
+        (scatter_df["Publication Year"] >= year_range[0]) & (scatter_df["Publication Year"] <= year_range[1])
+        ]
+    scatter_chart = alt.Chart(filtered_df).mark_circle(size=20).encode(
+        x=alt.X("Publication Year", title="Publication Year", scale=alt.Scale(domain=[year_range[0], year_range[1]])),
+        y=alt.Y("Pages", title="Number of Pages"),
+        tooltip=["Publication Year", "Pages"]
+    )
+    st.altair_chart(scatter_chart, use_container_width=True)
 def q7():
     # 7_Query to get a scatter plot of price vs. publication year
     price_query = """
@@ -186,6 +208,18 @@ def q7():
     x=alt.X("Publication Year", title="Publication Year"),
     y=alt.Y("Price", title="Price"),
     tooltip=["Publication Year", "Price"]
+    )
+    st.altair_chart(scatter_chart, use_container_width=True)
+    max_price = price_df["Price"].max()
+    min_price = price_df["Price"].min()
+    price_range = st.slider("Select Price Range", min_value=min_price, max_value=max_price,
+                            value=(min_price, max_price))
+    filtered_df = price_df[
+        (price_df["Price"] >= price_range[0]) & (price_df["Price"] <= price_range[1])]
+    scatter_chart = alt.Chart(filtered_df).mark_circle(size=20).encode(
+        x=alt.X("Publication Year", title="Publication Year"),
+        y=alt.Y("Price", title="Price"),
+        tooltip=["Publication Year", "Price"]
     )
     st.altair_chart(scatter_chart, use_container_width=True)
 
