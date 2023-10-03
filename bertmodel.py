@@ -1,6 +1,5 @@
 from deep_translator import GoogleTranslator
-#from transformers import pipeline
-import pandas as pd
+
 def gettr(text):
     translate = GoogleTranslator(source='auto', target='en').translate(text)
     return str(translate)

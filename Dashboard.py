@@ -13,18 +13,16 @@ from PIL import Image
 import streamlit.components.v1 as components
 from wordcloud import WordCloud
 from wordcloud_fa import WordCloudFa
-import nltk
 import re
 import string
-from bertmodel import gettr,recom
-from nltk.stem.snowball import SnowballStemmer
-from nltk.tokenize import word_tokenize
+from bertmodel import gettr, recom
+
 with open('info_of_database.txt') as p:
-    lines=(p.readlines())
-    host=lines[0].strip()
-    user=lines[1].strip()
-    password=lines[2].strip()
-    database=lines[3].strip()
+    lines = (p.readlines())
+    host = lines[0].strip()
+    user = lines[1].strip()
+    password = lines[2].strip()
+    database = lines[3].strip()
     p.close()
 try:
     mydb = mysql.connector.connect(
@@ -38,6 +36,7 @@ except mysql.connector.Error as err:
     st.error(f"Error connecting to the database: {err}")
     st.stop()
 
+
 def run_query(query):
     try:
         mycursor = mydb.cursor()
@@ -47,6 +46,8 @@ def run_query(query):
     except mysql.connector.Error as err:
         st.error(f"Error executing the query: {err}")
         return None
+
+
 def q1():
     # 1_Query to get the number of books per tag
     tag_query = """
@@ -61,10 +62,12 @@ def q1():
     st.subheader("1. Number of Books per Tag > 2000")
     tag_df = pd.DataFrame(tag_data, columns=["Tag", "Book Count"])
     chart = alt.Chart(tag_df).mark_bar().encode(
-    x=alt.X('Tag', sort='-y'),
-    y='Book Count'
+        x=alt.X('Tag', sort='-y'),
+        y='Book Count'
     )
     st.altair_chart(chart, use_container_width=True)
+
+
 def q2():
     # 2_query to get the top 10 publishers by book count
     publisher_query = """
@@ -81,10 +84,12 @@ def q2():
     st.subheader("2. Top 10 Publishers by Book Count")
     publisher_df = pd.DataFrame(publisher_data, columns=["Publisher", "Book Count"])
     chart = alt.Chart(publisher_df).mark_bar().encode(
-    x=alt.X('Publisher', sort='-y'),
-    y='Book Count'
+        x=alt.X('Publisher', sort='-y'),
+        y='Book Count'
     )
     st.altair_chart(chart, use_container_width=True)
+
+
 def q3():
     # 3_Query to get the number of books per publication year
     year_query = """
@@ -112,6 +117,8 @@ def q3():
         y='Book Count'
     )
     st.altair_chart(chart, use_container_width=True)
+
+
 def q4():
     # 4_Query to get the top 10 writers by book count
     writer_query = """
@@ -130,10 +137,12 @@ def q4():
     st.subheader("4. Top 10 Writers by Book Count")
     writer_df = pd.DataFrame(writer_data, columns=["Writer", "Book Count"])
     chart = alt.Chart(writer_df).mark_bar().encode(
-    x=alt.X('Writer', sort='-y'),
-    y='Book Count'
+        x=alt.X('Writer', sort='-y'),
+        y='Book Count'
     )
     st.altair_chart(chart, use_container_width=True)
+
+
 def q5():
     # 5_Query to get the top 10 translators by book count
     translator_query = """
@@ -153,10 +162,12 @@ def q5():
     st.subheader("5. Top 10 Translators by Book Count")
     translator_df = pd.DataFrame(translator_data, columns=["Translator", "Book Count"])
     chart = alt.Chart(translator_df).mark_bar().encode(
-    x=alt.X('Translator', sort='-y'),
-    y='Book Count'
+        x=alt.X('Translator', sort='-y'),
+        y='Book Count'
     )
     st.altair_chart(chart, use_container_width=True)
+
+
 def q6():
     # 6_Query to get a scatter plot of pages vs. publication year
     scatter_query = """
@@ -171,9 +182,9 @@ def q6():
     st.subheader("6. Scatter Plot: Pages vs. Publication Year")
     scatter_df = pd.DataFrame(scatter_data, columns=["Pages", "Publication Year"])
     scatter_chart = alt.Chart(scatter_df).mark_circle(size=20).encode(
-    x=alt.X("Publication Year", title="Publication Year"),
-    y=alt.Y("Pages", title="Number of Pages"),
-    tooltip=["Publication Year", "Pages"]
+        x=alt.X("Publication Year", title="Publication Year"),
+        y=alt.Y("Pages", title="Number of Pages"),
+        tooltip=["Publication Year", "Pages"]
     )
     st.altair_chart(scatter_chart, use_container_width=True)
     scatter_df["Publication Year"] = scatter_df["Publication Year"].astype(int)
@@ -189,6 +200,8 @@ def q6():
         tooltip=["Publication Year", "Pages"]
     )
     st.altair_chart(scatter_chart, use_container_width=True)
+
+
 def q7():
     # 7_Query to get a scatter plot of price vs. publication year
     price_query = """
@@ -205,9 +218,9 @@ def q7():
     st.subheader("7. Scatter Plot: Price vs. Publication Year")
     price_df = pd.DataFrame(price_data, columns=["Price", "Publication Year"])
     scatter_chart = alt.Chart(price_df).mark_circle(size=20).encode(
-    x=alt.X("Publication Year", title="Publication Year"),
-    y=alt.Y("Price", title="Price"),
-    tooltip=["Publication Year", "Price"]
+        x=alt.X("Publication Year", title="Publication Year"),
+        y=alt.Y("Price", title="Price"),
+        tooltip=["Publication Year", "Price"]
     )
     st.altair_chart(scatter_chart, use_container_width=True)
     max_price = price_df["Price"].max()
@@ -222,6 +235,7 @@ def q7():
         tooltip=["Publication Year", "Price"]
     )
     st.altair_chart(scatter_chart, use_container_width=True)
+
 
 def q8():
     # 8_Query to get a Price scatter chart based on book rate
@@ -253,6 +267,8 @@ def q8():
         tooltip=['rate', 'price']
     )
     st.altair_chart(chart, use_container_width=True)
+
+
 def q9():
     # 9_Query to Chart of the number of books according to the type of cut
     price_query = query = "SELECT size, COUNT(*) as book_count FROM book GROUP BY size"
@@ -267,19 +283,20 @@ def q9():
     )
     st.altair_chart(chart, use_container_width=True)
 
+
 def q10():
     # 10_Query Interactive chart
     st.sidebar.subheader("Advanced Book Search")
     rate_range = st.sidebar.slider("Rate Range", min_value=0.0, max_value=5.0, step=0.1, value=(0.0, 5.0))
-    english_title = st.sidebar.text_input("English Title").replace(' ','%')
-    persian_title = st.sidebar.text_input("Persian Title").replace(' ','%')
-    publisher_name = st.sidebar.text_input("Publisher Name").replace(' ','%')
+    english_title = st.sidebar.text_input("English Title").replace(' ', '%')
+    persian_title = st.sidebar.text_input("Persian Title").replace(' ', '%')
+    publisher_name = st.sidebar.text_input("Publisher Name").replace(' ', '%')
     min_solarh_py = st.sidebar.number_input("Minimum Solarh Py", min_value=0, step=100, value=0)
     max_solarh_py = st.sidebar.number_input("Maximum Solarh Py", min_value=0, step=100, value=8500)
-    tag_titles_list = st.sidebar.text_input("Tag").replace(' ','%')
-    publisher = st.sidebar.text_input("Publisher").replace(' ','%')
-    writer = st.sidebar.text_input("Writer").replace(' ','%')
-    cover = st.sidebar.text_input("Cover Type").replace(' ','%')
+    tag_titles_list = st.sidebar.text_input("Tag").replace(' ', '%')
+    publisher = st.sidebar.text_input("Publisher").replace(' ', '%')
+    writer = st.sidebar.text_input("Writer").replace(' ', '%')
+    cover = st.sidebar.text_input("Cover Type").replace(' ', '%')
     min_rate, max_rate = rate_range
     # Display Interactive chart
     st.subheader("10. Chart: Interactive chart")
@@ -302,11 +319,12 @@ def q10():
               AND p2.name LIKE '%{writer}%'
               AND b.cover_type LIKE '%{cover}%'
     """
-    values = (min_rate, max_rate, f"%{english_title}%", f"%{persian_title}%", f"%{publisher_name}%", min_solarh_py, max_solarh_py,
+    values = (
+    min_rate, max_rate, f"%{english_title}%", f"%{persian_title}%", f"%{publisher_name}%", min_solarh_py, max_solarh_py,
     f"%{tag_titles_list}%", f"%{publisher}%", f"%{writer}%", f"%{cover}%")
     mycursor = mydb.cursor()
     mycursor.execute(query)
-    data=mycursor.fetchall()
+    data = mycursor.fetchall()
 
     df = pd.DataFrame(data, columns=['Rate', 'English Title', 'Persian Title', 'Publisher Name', 'Solarh Py', 'Tag',
                                      'Publisher', 'Writer', 'Cover']).drop_duplicates()
@@ -318,9 +336,10 @@ def q10():
         st.dataframe(df)
     mycursor.close()
 
+
 def q11():
     # Buyer request 1
-    price_query =  """SELECT b.persian_title,
+    price_query = """SELECT b.persian_title,
        p.is_writer          as is_writerr,
        p.name               AS writer_name,
        COUNT(DISTINCT b.id) AS num_books,
@@ -343,9 +362,10 @@ ORDER BY total_likes DESC, num_books DESC
     # Buyer request 1
     st.subheader("Buyer request 1: The best authors of the romance genre")
     df = pd.DataFrame(data,
-                  columns=['book name', 'is writer', 'writer name', 'num of books', 'total likes', 'tag name', 'price',
-                           'print'])
-    df0=df[['writer name']].drop_duplicates().head(5)
+                      columns=['book name', 'is writer', 'writer name', 'num of books', 'total likes', 'tag name',
+                               'price',
+                               'print'])
+    df0 = df[['writer name']].drop_duplicates().head(5)
     st.dataframe(df0.reset_index()[['writer name']])
     options = st.multiselect("Select View Option", ["Top High Print Series", "Top High Price"])
     if "Top High Print Series" in options:
@@ -354,6 +374,7 @@ ORDER BY total_likes DESC, num_books DESC
     elif "Top High Price" in options:
         sorted_df = df.sort_values(by='price', ascending=False)
         st.dataframe(sorted_df[['writer name']].drop_duplicates().head(5).reset_index()[['writer name']])
+
 
 def q12():
     # Buyer request 2
@@ -382,7 +403,7 @@ def q12():
       AND b.price <= {price_threshold}
     order by rate desc, price asc
     """
-    results=run_query(query)
+    results = run_query(query)
     df = pd.DataFrame(results, columns=['id', 'isbn', 'p_title', 'e_title', 'rate', 'price', 'series', 'like'])
     # Buyer request 2
     st.subheader("Buyer request 2: The best books in the first quarter of quality")
@@ -394,7 +415,7 @@ def q12():
         like_max = df['series'].max()
         avg = (like_max - like_min) / 5
         sorted_df = df[(df['series'] >= avg) & (df['series'] <= like_max)].sort_values(by=['series'],
-                                                                                   ascending=False)
+                                                                                       ascending=False)
         st.dataframe(sorted_df)
     elif "Top High Print Series" in options:
         sorted_df = df.sort_values(by='series', ascending=False)
@@ -406,6 +427,7 @@ def q12():
         sorted_df = df[(df['like'] >= avg) & (df['like'] <= like_max)].sort_values(by='like', ascending=False)
         st.dataframe(sorted_df)
 
+
 def q13():
     # Author request
     rate_percentile_query = "SELECT rate FROM book ORDER BY rate DESC"
@@ -416,7 +438,7 @@ def q13():
     price_index = int(len(price_results) * 0.2)
     rate_threshold = rate_results[rate_index][0]
     price_threshold = price_results[price_index][0]
-    query = query='''
+    query = query = '''
     select publisher.name as name,count(*) as number_of_books,sum(rate)/count(*) as mean_of_book_rate,sum(price)/count(*) as mean_of_book_price,
        sum(print_series)/count(*) as mean_of_prseries
 from book
@@ -427,10 +449,10 @@ inner join publisher on book.publisher_id = publisher.id
 where tag_title like '%تاریخی%'
 group by publisher.id
 '''
-    results=run_query(query)
+    results = run_query(query)
     df = pd.DataFrame(results,
-                       columns=['name', 'number_of_books', 'mean_of_book_rate', 'mean_of_book_price',
-                                'mean_of_prseries'])
+                      columns=['name', 'number_of_books', 'mean_of_book_rate', 'mean_of_book_price',
+                               'mean_of_prseries'])
 
     # Author request
 
@@ -438,19 +460,20 @@ group by publisher.id
 
     options = st.multiselect("Select View Option",
                              ["Top High number of books", "Top High mean of book rate",
-                              "Top High mean of book price","Top High mean of book print series"],max_selections=2)
-    sorted_df=df
+                              "Top High mean of book price", "Top High mean of book print series"], max_selections=2)
+    sorted_df = df
     if options:
         for i in options:
-            if "Top High number of books"==i:
+            if "Top High number of books" == i:
                 sorted_df = sorted_df.sort_values(by='number_of_books', ascending=False).head(5)
-            if "Top High mean of book rate"==i:
+            if "Top High mean of book rate" == i:
                 sorted_df = sorted_df.sort_values(by='mean_of_book_rate', ascending=False).head(5)
-            if "Top High mean of book price"==i:
+            if "Top High mean of book price" == i:
                 sorted_df = sorted_df.sort_values(by='mean_of_book_price', ascending=False).head(5)
-            if "Top High mean of book print series"==i:
+            if "Top High mean of book print series" == i:
                 sorted_df = sorted_df.sort_values(by='mean_of_prseries', ascending=False).head(5)
     st.dataframe(sorted_df.reset_index(drop=True).head(5))
+
 
 def q14():
     # The first hypothesis test
@@ -510,17 +533,18 @@ def q14():
     except mysql.connector.Error as e:
         (f"Database connection error: {e}")
 
+
 def q15():
     # Graph of tags
     st.subheader("Graph of tags")
     G = nx.Graph()
-    query='''
+    query = '''
                 select tag_title
                 from tag
     '''
     data = run_query(query)
     nod_list = [x[0] for x in data]
-    eq='''
+    eq = '''
         with a as (
             SELECT
                     bt.tag_id as tid,
@@ -540,7 +564,7 @@ GROUP BY tname1,tname2
 ORDER BY cral DESC,tname1 ASC
 limit 233
     '''
-    edata=run_query(eq)
+    edata = run_query(eq)
     G.add_nodes_from(nod_list)
     # pos = nx.circular_layout(G, scale=1000)
     # for n in nod_list:
@@ -557,6 +581,7 @@ limit 233
     a = net.generate_html('h.html', local=False)
     components.html(a, width=800, height=600)
 
+
 def q16():
     # Correlation between book tags
     st.subheader("Correlation between book tags")
@@ -572,9 +597,11 @@ def q16():
             by='Confidence',
             ascending=False,
             inplace=False)
-        d=df[['Consequent', 'Confidence']].reset_index(drop=True).head(2).iloc[0:,0][0].replace('{','').replace('}','').replace('\'','')
+        d = df[['Consequent', 'Confidence']].reset_index(drop=True).head(2).iloc[0:, 0][0].replace('{', '').replace('}',
+                                                                                                                    '').replace(
+            '\'', '')
         st.dataframe(df[['Consequent', 'Confidence']].reset_index(drop=True).head(5))
-        query=f'''
+        query = f'''
         select bt.book_id,book.persian_title
         from book
         inner join book_tag bt on book.id = bt.book_id
@@ -587,7 +614,7 @@ def q16():
                 
         '''
         data = run_query(query)
-        dff=pd.DataFrame(data,columns=['book_id', 'title'])
+        dff = pd.DataFrame(data, columns=['book_id', 'title'])
         st.dataframe(dff.reset_index(drop=True))
 
 
@@ -632,6 +659,8 @@ def q17():
     ).interactive()
     st.title("Average Rate for Selected Tags")
     st.altair_chart(chart, use_container_width=True)
+
+
 def q18():
     # Price Distribution of Top Ten Publishers
     st.subheader("Price Distribution of Top Ten Publishers")
@@ -642,7 +671,7 @@ def q18():
        ORDER BY price DESC
        LIMIT 10
        """
-    data=run_query(query)
+    data = run_query(query)
     df = pd.DataFrame(data, columns=["Publisher", "Price"])
     chart = alt.Chart(df).mark_bar().encode(
         x=alt.X("Price:Q", bin=alt.Bin(maxbins=20), title="Price"),
@@ -652,11 +681,12 @@ def q18():
 
     st.altair_chart(chart, use_container_width=True)
 
+
 def q19():
     # More options Word Cloud
     st.subheader("More options : Word Cloud")
     query = '''SELECT tag_title FROM tag;'''
-    data=run_query(query)
+    data = run_query(query)
     genre_list = []
     for i in data:
         genre_list.append(i[0])
@@ -674,7 +704,7 @@ def q19():
                             where tag_title in (%s) 
                 ''', tuple(li1))
         data = mycursor.fetchall()
-        df = pd.DataFrame(data, columns=['tag_title','content'])
+        df = pd.DataFrame(data, columns=['tag_title', 'content'])
         text = " ".join(review for review in df.content)
         if text:
             text = text.lower()
@@ -696,17 +726,20 @@ def q19():
             stopwords = set(stopwords)
             mask_array = np.array(Image.open("image.jpg"))
             wordcloud = WordCloudFa(stopwords=stopwords, background_color="white", width=900, height=500,
-                                    persian_normalize=True,include_numbers=False,no_reshape=False,collocations=False).generate(text)
+                                    persian_normalize=True, include_numbers=False, no_reshape=False,
+                                    collocations=False).generate(text)
             fig, ax = plt.subplots(figsize=(24, 12))
             ax.imshow(wordcloud, interpolation='bilinear')
             ax.axis("off")
             st.write(fig)
 
+
 def q20():
     st.subheader("Tell me about your feelings and I will tell you what genre of book to read")
-    t=st.text_input('')
-    rco=(gettr(t))
+    t = st.text_input('')
+    rco = (gettr(t))
     f'{rco}'
+
 
 try:
     page_options = {
@@ -723,7 +756,7 @@ try:
         "Buyer request 1": q11,
         "Buyer request 2": q12,
         "Author request": q13,
-        "hypothesis test":q14,
+        "hypothesis test": q14,
         "More options graph": q15,
         "More options Correlation": q16,
         "More options Average Rate": q17,

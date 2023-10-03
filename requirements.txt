@@ -1,0 +1,16 @@
+pandas~=2.1.1
+apyori
+deep_translator
+hazm
+streamlit~=1.12.0
+matplotlib
+mysql
+altair~=5.1.1
+scipy~=1.11.3
+networkx
+pyvis
+wordcloud_fa
+numpy~=1.26.0
+Pillow~=10.0.1
+requests~=2.31.0
+beautifulsoup4~=4.12.2
