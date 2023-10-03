@@ -250,12 +250,12 @@ def q8():
     # Display the Price scatter chart based on book rate
     st.subheader("8. Scatter Plot: Price scatter chart based on book rate")
     df = pd.DataFrame(price_data, columns=['rate', 'price'])
-    chart = alt.Chart(df).mark_circle(size=15).encode(
-        x=alt.X("rate:Q", title="Rating", scale=alt.Scale(domain=(2.5, 4.5), nice=False)),
-        y=alt.Y("price:Q", title="Price Of Book"),
-        tooltip=['rate', 'price']
-    )
-    st.altair_chart(chart, use_container_width=True)
+    # chart = alt.Chart(df).mark_circle(size=15).encode(
+    #     x=alt.X("rate:Q", title="Rating", scale=alt.Scale(domain=(2.5, 4.5), nice=False)),
+    #     y=alt.Y("price:Q", title="Price Of Book"),
+    #     tooltip=['rate', 'price']
+    # )
+    # st.altair_chart(chart, use_container_width=True)
 
     rate_range = st.slider("Rate Range", min_value=2.5, max_value=4.5, value=(2.5, 4.5), step=0.1)
     price_range = st.slider("Price Range", min_value=0, max_value=4000000, value=(0, 4000000), step=1000)

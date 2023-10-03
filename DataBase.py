@@ -6,7 +6,6 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.schema import Sequence
 from urllib.parse import quote_plus
 from sqlalchemy.orm import sessionmaker
-import pymysql
 with open('info of database.txt') as p:
     lines=(p.readlines())
     host=lines[0].strip()
