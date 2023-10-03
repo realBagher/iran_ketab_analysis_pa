@@ -1,7 +1,4 @@
-import requests
 from bs4 import BeautifulSoup
-import pandas as pd
-import time
 import asyncio
 import aiohttp
 import nest_asyncio

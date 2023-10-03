@@ -1,32 +1,32 @@
-import requests
 from bs4 import BeautifulSoup
 import pandas as pd
 import time
 import asyncio
 import aiohttp
 import nest_asyncio
-from urllib.parse import unquote
 
 headers = {'User-Agent':
-               'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36',
-          "Accept-Language":
-              "en-US,en;q=0.5",
-           'encoding':'utf-8'}
-site='https://www.iranketab.ir'
-df=pd.read_csv('link_of_all_books.csv')
-links=df['0'].values
-site='https://www.iranketab.ir'
+               'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) '
+               'Chrome/50.0.2661.102 Safari/537.36',
+           "Accept-Language":
+               "en-US,en;q=0.5",
+           'encoding': 'utf-8'}
+site = 'https://www.iranketab.ir'
+df = pd.read_csv('link_of_all_books.csv')
+links = df['0'].values
+site = 'https://www.iranketab.ir'
 
-dictt={'f_title':[],'e_title':[],'price_broken':[],
-       'price_special':[],'discount':[],'data_rating':[],
-       'publishers':[],'author':[],'book_id':[],'shbook':[],
-       'ghat':[],'npages':[],'translator':[],'jyear':[],'myear':[],
-       'description':[],'typej':[],'sprint':[],'product_features':[],'product_tags':[],'persian_bar':[],'lbook':[]}
-profiles_all={'book_id':[],'name':[],'role':[]}
-profiles_link={'book_id':[],'name':[],'link':[],'role':[]}
-publishers_all={'book_id':[],'name':[]}
-publishers_link={'book_id':[],'name':[],'link':[]}
-tags={'book_id':[],'name':[]}
+dictt = {'f_title': [], 'e_title': [], 'price_broken': [],
+         'price_special': [], 'discount': [], 'data_rating': [],
+         'publishers': [], 'author': [], 'book_id': [], 'shbook': [],
+         'ghat': [], 'npages': [], 'translator': [], 'jyear': [], 'myear': [],
+         'description': [], 'typej': [], 'sprint': [], 'product_features': [], 'product_tags': [], 'persian_bar': [],
+         'lbook': []}
+profiles_all = {'book_id': [], 'name': [], 'role': []}
+profiles_link = {'book_id': [], 'name': [], 'link': [], 'role': []}
+publishers_all = {'book_id': [], 'name': []}
+publishers_link = {'book_id': [], 'name': [], 'link': []}
+tags = {'book_id': [], 'name': []}
 
 
 async def get_books(soup):
@@ -202,11 +202,14 @@ async def get_books(soup):
             dictt['lbook'].append(lbook)
     return (dictt, profiles_all, profiles_link, publishers_all, publishers_link, tags)
 
+
 semaphore = asyncio.Semaphore(10)
+
+
 async def fetch(session, url):
     try:
         async with semaphore:
-            async with session.get(url,timeout=False) as response:
+            async with session.get(url, timeout=False) as response:
                 response_text = await response.text()
                 print(f"Response from {url}: {len(response_text)} bytes")
                 return response_text
@@ -215,7 +218,9 @@ async def fetch(session, url):
     except Exception as e:
         print(f"Unexpected error while fetching {url}: {e}")
 
+
 count = []
+
 
 async def scrape_book(url):
     async with aiohttp.ClientSession() as session:
@@ -223,7 +228,7 @@ async def scrape_book(url):
             html = await fetch(session, url)
             if html:
                 soup = BeautifulSoup(html, 'html.parser')
-                res=await get_books(soup)
+                res = await get_books(soup)
                 print(len(count))
                 count.append(True)
                 return 1
@@ -234,7 +239,8 @@ async def scrape_book(url):
             print(f"Error while scraping {url}: {e}")
             return 0
 
-urls=links
+
+urls = links
 nest_asyncio.apply()
 asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 loop = asyncio.get_event_loop()
@@ -243,7 +249,7 @@ for j in range(0, len(urls), batch_size):
     batch = urls[j:j + batch_size]
     results = loop.run_until_complete(asyncio.gather(*(scrape_book(url) for url in batch)))
     time.sleep(5)
-i='all'
+i = 'all'
 pd.DataFrame(dictt).to_csv(f'books {i}.csv')
 pd.DataFrame(profiles_all).to_csv(f'all_persons {i}.csv')
 pd.DataFrame(profiles_link).to_csv(f'all_persons_links {i}.csv')
