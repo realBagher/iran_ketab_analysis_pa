@@ -11,11 +11,10 @@ from pyvis.network import Network
 import numpy as np
 from PIL import Image
 import streamlit.components.v1 as components
-from wordcloud import WordCloud
 from wordcloud_fa import WordCloudFa
 import re
 import string
-from bertmodel import gettr, recom
+from bertmodel import gettr
 
 with open('info_of_database.txt') as p:
     lines = (p.readlines())
